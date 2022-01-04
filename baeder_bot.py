@@ -50,8 +50,14 @@ def baeder(url):
 
 def start(update: Update, context: CallbackContext) -> None:
     obj = {'u': update, 'c': context}
-    update.message.reply_text(f'Start watching')
-    context.job_queue.run_repeating(runner, 60, context=obj)
+    if len(context.job_queue.jobs())>0:
+      update.message.reply_text(f'Process is started already')
+      return
+    if len(context.user_data)>0:
+      update.message.reply_text(f'Start watching')
+      context.job_queue.run_repeating(runner, 60, first=1, context=obj)
+    else:
+      update.message.reply_text(f'Nothing to do')
 
 def runner(context: CallbackContext) -> None:
     u = context.job.context['u']
@@ -64,7 +70,7 @@ def runner(context: CallbackContext) -> None:
         to_remove.append(key)
     for key in to_remove:
       del c.user_data[key]
-    if len(c.user_data) == 0:
+    if (len(c.user_data) == 0):
       u.message.reply_text(f'No more URLs left, stopping. Add more URLs and /start again.')
       context.job.schedule_removal()
 
@@ -93,6 +99,11 @@ def list_urls(update: Update, context: CallbackContext) -> None:
       update.message.reply_text(f'{context.user_data.get(key)}',disable_web_page_preview=True)
 
 def clear_urls(update: Update, context: CallbackContext) -> None:
+    js = context.job_queue.jobs()
+    if len(js)>0:
+      update.message.reply_text(f'Stopping {len(js)} threads')
+      for j in js:
+        j.schedule_removal()
     update.message.reply_text(f'Clearing URLs')
     context.user_data.clear()
 
