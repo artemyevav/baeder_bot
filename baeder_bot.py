@@ -21,7 +21,7 @@ def baeder(url):
  book = re.sub(r'^(.*\/)(\d*)\/$',r'\1redeem?voucher='+voucher+r'&subevent=\2',url)
  ret = {}
  try:
-  with urllib.request.urlopen(url) as fp:
+  with urllib.request.urlopen(url, timeout=10) as fp:
       soup = BeautifulSoup (fp.read(), 'html.parser')
   a = soup.find_all("div","alert")
   if len(a):
@@ -30,7 +30,6 @@ def baeder(url):
      ret = {'abort': 1, 'msg': aa }
     if re.match(r'.*beginnen.*',aa):
      ret = {'abort': 0, 'msg': aa}
-
   if len(ret): return ret
 
   with urllib.request.urlopen(book) as fp:
@@ -85,7 +84,7 @@ def watch_command(update: Update, context: CallbackContext) -> None:
       else:
         context.user_data[key] = value
         update.message.reply_text(f'Watching at {value}, don\'t forget to /start',disable_web_page_preview=True)
-        logging.info(f'{key}: {value}')
+#        logging.info(f'{key}: {value}')
     else:
       update.message.reply_text('Usage: /watch https://pretix.eu/Baeder/XXX/YYY/')
 
