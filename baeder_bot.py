@@ -43,7 +43,7 @@ def baeder(url):
   else:
    ret = {'abort': 1, 'msg':d+p+"\n"+book}
  except:
-   ret = {'abort': 1, 'msg': 'Something went wrong'}
+   ret = {'abort': 1, 'msg': f"Something went wrong, re-add {url} please"}
  return ret
 
 
