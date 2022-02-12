@@ -29,7 +29,7 @@ def baeder(url):
     if re.match(r'.*beendet.*',aa):
      ret = {'abort': 1, 'msg': aa }
     if re.match(r'.*beginnen.*',aa):
-     ret = {'abort': 0, 'msg': aa}
+     ret = {'abort': 0, 'msg': 0}
   if len(ret): return ret
 
   with urllib.request.urlopen(book) as fp:
@@ -39,11 +39,11 @@ def baeder(url):
   p = soup.find_all("div","price")[0].text.strip()
   a = soup.find_all("div","availability-box")[0].text.strip()
   if a!="":
-   ret = {'abort': 0, 'msg': a}
+   ret = {'abort': 0, 'msg': 0}
   else:
    ret = {'abort': 1, 'msg':d+p+"\n"+book}
  except:
-   ret = {'abort': 1, 'msg': f"Something went wrong, re-add {url} please"}
+   ret = {'abort': 0, 'msg': f"Something went wrong with {url}, ignoring"}
  return ret
 
 
@@ -64,8 +64,9 @@ def runner(context: CallbackContext) -> None:
     to_remove=[]
     for key in c.user_data:
       book = baeder(c.user_data.get(key))
-      if book["abort"] == 1:
+      if book["msg"]:
         u.message.reply_text(f'{book["msg"]}',disable_web_page_preview=True)
+      if book["abort"] == 1:
         to_remove.append(key)
     for key in to_remove:
       del c.user_data[key]
@@ -78,13 +79,14 @@ def watch_command(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id
     key = str(uuid4())
     value = update.message.text.partition(' ')[2]
+    u = update.message.from_user
     if value:
       if value in context.user_data.values():
         update.message.reply_text(f'Already in the list')
       else:
         context.user_data[key] = value
         update.message.reply_text(f'Watching at {value}, don\'t forget to /start',disable_web_page_preview=True)
-#        logging.info(f'{key}: {value}')
+        logging.info(f'{u["id"]} ({u["username"]}): {value}')
     else:
       update.message.reply_text('Usage: /watch https://pretix.eu/Baeder/XXX/YYY/')
 
